@@ -36,7 +36,8 @@ define('OUTPUT_FORMAT',(isset($_GET['output']) ? (in_array($_GET['output'],array
 
 //Can login with user and pass each time but for secondary calls (delete) a token must be used.
 //Token is output on login calls only
-//Token expires after 3 minutes, bugger - may not even need this token thing
+//Token expires after 3 minutes, bugger
+//May not even need this token thing, it seems all API calls can be done in a single request
 
 function handle_login($p,$r){
 	$_SESSION['sessid'] = array();	//stupid script uses sessions so to make it stand alone we have to do tha same
