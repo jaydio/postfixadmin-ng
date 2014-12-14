@@ -3,7 +3,7 @@ or
 &user=******@domain.com&pass=******
 
 
-http://localhost/hosted/admin/postfixadmin/api/?call=list_domains&search=mm
+http://...../postfixadmin/api/?call=list_domains&search=mm
 
 
 
