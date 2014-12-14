@@ -249,8 +249,7 @@ function pre($a){
 process_api();
 
 
-
- /**
+/*
  * Postfix Admin API
  * 
  * LICENSE 
