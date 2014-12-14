@@ -1,3 +1,5 @@
+Token auth may be removed, it's clunky and possible not required.
+
 &token=*************
 or
 &user=******@domain.com&pass=******
@@ -5,9 +7,9 @@ or
 
 http://...../postfixadmin/api/?call=list_domains&search=mm
 
-
-
-Mods:
+Core mods: 
+This core code mod is optional but The API uses the PFA functionality directly and one of the API 
+calls has no response without this modification
 Change line 420 of ../functions.inc.php
 from:
         die("Error: " . join("\n", $handler->errormsg));
