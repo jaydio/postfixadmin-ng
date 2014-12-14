@@ -1,0 +1,15 @@
+&token=*************
+or
+&user=******@domain.com&pass=******
+
+
+http://localhost/hosted/admin/postfixadmin/api/?call=list_domains&search=mm
+
+
+
+Mods:
+Change line 420 of ../functions.inc.php
+from:
+        die("Error: " . join("\n", $handler->errormsg));
+to:
+        return(false);
