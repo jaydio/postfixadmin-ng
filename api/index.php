@@ -14,8 +14,8 @@ require('./lib/list.php');
 
 
 
-define('PFAPI_USER','*************************');				//Postfix admin username (email)
-define('PFAPI_PASS','*********');								//Postfix admin password
+define('PFAPI_USER','pfapi@mymobilepatron.com');				//Postfix admin username (email)
+define('PFAPI_PASS','hedca5e2');								//Postfix admin password
 define('DEFAULT_OUTPUT_FORMAT','json_pretty');					//pre|json|json_pretty
 define('ADMIN_TOKEN_FILE','./lib/token/.latocfile');			//protect directory
 define('ADMIN_TOKEN_EXPIRE',180);								//seconds to expire token
@@ -36,8 +36,7 @@ define('OUTPUT_FORMAT',(isset($_GET['output']) ? (in_array($_GET['output'],array
 
 //Can login with user and pass each time but for secondary calls (delete) a token must be used.
 //Token is output on login calls only
-//Token expires after 3 minutes, bugger
-//May not even need this token thing, it seems all API calls can be done in a single request
+//Token expires after 3 minutes, bugger - may not even need this token thing
 
 function handle_login($p,$r){
 	$_SESSION['sessid'] = array();	//stupid script uses sessions so to make it stand alone we have to do tha same
@@ -249,7 +248,8 @@ function pre($a){
 process_api();
 
 
-/*
+
+ /**
  * Postfix Admin API
  * 
  * LICENSE 
@@ -333,8 +333,8 @@ Shows alias for matching "domain" field
 						  [address] => abuse@domain.com
 						  [goto] => Array						//Array of sent to addresses
 								(
-									 [0] => abuse@domain.com
-									 [1] => errors@domain.com
+									 [0] => abuse@mymobilepatron.com
+									 [1] => errors@mymobilepatron.com
 								)
 
 						  [active] => 1
@@ -349,7 +349,7 @@ Shows alias for matching "domain" field
 		  (
 				[0] => domain.com
 				[1] => domain2.com
-				[2] => domain3.com
+				[2] => mmp.so
 		  )
 
 	 [response] => Array									//Array of matched aliases/domains for "search" across all domains
@@ -359,8 +359,8 @@ Shows alias for matching "domain" field
 						  [address] => abuse@domain.com
 						  [goto] => Array						//Array of sent to addresses
 								(
-									 [0] => abuse@domain.com
-									 [1] => errors@domain.com
+									 [0] => abuse@mymobilepatron.com
+									 [1] => errors@mymobilepatron.com
 								)
 
 						  [active] => 1
