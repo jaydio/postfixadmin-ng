@@ -177,7 +177,7 @@ function process_api(){
 						break;
 
 						case 'edit_alias':
-							$r = edit_ailias($p,$r);
+							$r = edit_alias($p,$r);
 						break;
 
 						case 'list_alias':

@@ -36,7 +36,7 @@ function create_alias($p,$r){
 	return($r);
 }
 
-function edit_ailias($p,$r){
+function edit_alias($p,$r){
 	//Define requirements
 	$required = array();
 	$required['domain'] = array('type'=>'domain_nolookup','desc'=>'existing domain name');
