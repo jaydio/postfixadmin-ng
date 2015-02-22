@@ -176,6 +176,10 @@ function process_api(){
 							$r = create_alias($p,$r);
 						break;
 
+						case 'edit_alias':
+							$r = edit_ailias($p,$r);
+						break;
+
 						case 'list_alias':
 							$r = list_alias($p,$r);
 						break;
@@ -196,7 +200,7 @@ function process_api(){
 						
 						default:
 							$r['code'] = 94;
-							$r['errors'][] = 'Unrecognized call';
+							$r['errors'][] = 'Unrecognised call: '.$p['call'];
 						break;
 					}
 				}else{
