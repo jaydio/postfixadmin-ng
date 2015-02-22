@@ -18,7 +18,7 @@ define('DEFAULT_OUTPUT_FORMAT','json_pretty');					//pre|json|json_pretty
 define('ADMIN_TOKEN_FILE','./lib/token/.latocfile');			//protect directory
 define('ADMIN_TOKEN_EXPIRE',180);								//seconds to expire token
 define('ADMIN_TOKEN_ENTROPY','~$\:hkAar?3,HG5v:,$&X~PSzC._CHGD$2>Dvdvq=g2{4@HF\'F%3Y)M)<00-#Waf{?1oclU*>$]y>W:meNp^32ciD2B785<;y&\'<X9Kt2z3ny@iu{5H(Y2,K]Modl+on~0tGoUE`m8tc[?nG8gw{9>l9J_qS8\Yg%I#>4\z~?pt.Ly;S9CUl[8ses@uR');	//Entropy for encryption (MCRYPT_BlOWFISH and MCRYPT_MODE_CBC)
-define('REQUEST_METHOD','GET');									//GET|POST
+define('REQUEST_METHOD','POST');									//GET|POST
 
 ////End configuration
 
