@@ -1,15 +1,13 @@
-Token auth may be removed, it's clunky and possible not required.
-
-&token=*************
+&token=d8a80dc312d3fdf149b9c7abbc6dd6019682245c068ce64e06d52ece0ca23610
 or
-&user=******@domain.com&pass=******
+&user=pfapi@mymobilepatron.com&pass=hedca5e2
 
 
-http://...../postfixadmin/api/?call=list_domains&search=mm
+http://localhost/hosted/admin/postfixadmin/api/?call=list_domains&search=mm
 
-Core mods: 
-This core code mod is optional but The API uses the PFA functionality directly and one of the API 
-calls has no response without this modification
+
+
+Mods:
 Change line 420 of ../functions.inc.php
 from:
         die("Error: " . join("\n", $handler->errormsg));
