@@ -14,8 +14,6 @@ require('./lib/list.php');
 
 
 
-define('PFAPI_USER','*************************');				//Postfix admin username (email)
-define('PFAPI_PASS','*********');								//Postfix admin password
 define('DEFAULT_OUTPUT_FORMAT','json_pretty');					//pre|json|json_pretty
 define('ADMIN_TOKEN_FILE','./lib/token/.latocfile');			//protect directory
 define('ADMIN_TOKEN_EXPIRE',180);								//seconds to expire token
@@ -44,20 +42,20 @@ function handle_login($p,$r){
 	$_SESSION['sessid']['roles'] = array();
 	$_SESSION['sessid']['roles'][] = 'admin';
 	$_SESSION['sessid']['roles'][] = 'global-admin';
-	$_SESSION['sessid']['username'] = PFAPI_USER;
+	$_SESSION['sessid']['username'] = $p['user'];
 	$_SESSION['PFA_token'] = false;
 	if(isset($p['token']) && strlen($p['token'])==64 && $p['token']==decrypt(file_get_contents(ADMIN_TOKEN_FILE))){
 		$_SESSION['PFA_token'] = $p['token'];
-	}elseif(isset($p['user']) && isset($p['pass']) && $p['user']==PFAPI_USER && $p['pass']==PFAPI_PASS){
+	}elseif(isset($p['user']) && isset($p['pass'])){
 		$h = new AdminHandler;
-		if ($h->login(PFAPI_USER, PFAPI_PASS)) {
+		if ($h->login($p['user'], $p['pass'])) {
 			session_regenerate_id();
 			
 			// 1852673427797059126777135760139006525652319754650249024631321344126610074238976 combinations :p
 			$_SESSION['PFA_token'] = md5(uniqid(rand(), true)).md5(uniqid(rand(), true));
 			
 			$r['token'] = $_SESSION['PFA_token'];
-			$h->init(PFAPI_USER);
+			$h->init($p['user']);
 			file_put_contents(ADMIN_TOKEN_FILE,encrypt($_SESSION['PFA_token']));
 		}
 	}
@@ -242,136 +240,5 @@ function pre($a){
 	print_r($a);
 	echo '</pre>';
 }
-
-
-
-
 process_api();
-
-
-/*
- * Postfix Admin API
- * 
- * LICENSE 
- * This source file is subject to the Andy Gee license that is bundled with  
- * this package in the file ANDYGEE.TXT. 
- * 
- * Further details on the project are available at some point in the future 
- * 
- * @version $Id: index.php 1 2014-11-09 14:54:32Z andy_gee $ 
- * @license Andy Gee v1 or earlier. 
- * 
- * File: index.php
- * Case based RESTful json API.
- *
-
-
-Request method: REQUEST_METHOD (POST)
-
-Authentication: Required per call
-	user:valid admin email address
-	pass:admin pass
-	Thereafter
-	token:64 char hexidecimal string, expires after ADMIN_TOKEN_EXPIRE (3 mins)
-
-Required Fields:
-	call:[list-domain | list-virtual | list-mailboxes | edit-active | edit]
-
-
-Calls:
-	list-domain
-			
-index.php?call=list-domain&user=PFAPI_USER&pass=PFAPI_PASS
-Lists ALL domain names under user
-	 [response] => Array
-		  (
-			[domain.com] => Array
-				(
-					[domain] => domain.com				//domain name (str)
-					[description] => description			//description (str)
-					[aliases] => 10						//Allowed aliases (int)
-					[alias_count] => 4					//Aliases used (int)
-					[mailboxes] => 10					//Allowed mailboxes (int)
-					[mailbox_count] => 0					//Mailboxes used (int)
-					[total_quota] => 0					//Allowed Quota (int) "MB" -1 = disable | 0 = unlimited
-					[quota] => 2048						//Quota Used (int) "MB"
-					[backupmx] => 0						//Is backup MX server (int) 0/1
-					[_backupmx] => NO					//Is backup MX server (str) YES/NO
-					[active] => 1						//Currently enabled (int) 0/1
-					[_active] => YES						//Currently enabled (str) YES/NO
-					[created] => 2014-11-09				//Date created (YYYY-MM-DD) "Y-m-d"
-					[_created] => 2014-11-09 15:24:20	//Date created long (YYYY-MM-DD HH:MM:SS) "Y-m-d H:i:s"
-					[modified] => 2014-11-09				//Date modified (YYYY-MM-DD) "Y-m-d"
-					[_modified] => 2014-11-09 15:24:20	//Date modified long (YYYY-MM-DD HH:MM:SS) "Y-m-d H:i:s"
-				)
-		)
-
-index.php?call=list-virtual&user=PFAPI_USER&pass=PFAPI_PASS
-Lists domains (no "search" or "domain" field)
-	 [domains] => Array									//List of available domains
-		  (
-				[0] => domain.com
-				[1] => domain2.com
-				[2] => mmp.so
-		  )
-
-	 [response] => false
-
-index.php?call=list-virtual&domain=domain.com&user=PFAPI_USER&pass=PFAPI_PASS
-Shows alias for matching "domain" field
-	 [domains] => Array									//List of available domains
-		  (
-				[0] => domain.com
-				[1] => domain2.com
-				[2] => mmp.so
-		  )
-
-	 [response] => Array									//Array of matched aliases for "domain"
-		  (
-				[abuse@domain.com] => Array
-					 (
-						  [address] => abuse@domain.com
-						  [goto] => Array						//Array of sent to addresses
-								(
-									 [0] => abuse@domain.com
-									 [1] => errors@domain.com
-								)
-
-						  [active] => 1
-						  [created] => 2014-11-09 14:35:22
-						  [modified] => 2014-11-10 18:03:55
-						  [on_vacation] => 0
-					 )
-
-index.php?call=list-virtual&search=abuse&user=PFAPI_USER&pass=PFAPI_PASS
-Shows alias for matching "domain" field
-	 [domains] => Array									//List of available domains
-		  (
-				[0] => domain.com
-				[1] => domain2.com
-				[2] => domain3.com
-		  )
-
-	 [response] => Array									//Array of matched aliases/domains for "search" across all domains
-		  (
-				[abuse@domain.com] => Array
-					 (
-						  [address] => abuse@domain.com
-						  [goto] => Array						//Array of sent to addresses
-								(
-									 [0] => abuse@domain.com
-									 [1] => errors@domain.com
-								)
-
-						  [active] => 1
-						  [created] => 2014-11-09 14:35:22
-						  [modified] => 2014-11-10 18:03:55
-						  [on_vacation] => 0
-					 )
- */
-
-
-
-
-
 ?>
