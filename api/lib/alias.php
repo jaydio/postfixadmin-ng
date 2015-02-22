@@ -57,7 +57,7 @@ function edit_alias($p,$r){
 		// Set values
 		$edit_fields['values']['active'] = $p['active']; 	//bool
 		$edit_fields['values']['domain'] = $p['domain'];	//domain.com
-		$edit_fields['values']['goto'] = $p['goto'];		//list separated with "\r\n"
+		$edit_fields['values']['goto'] = $p['goto'];		//list separated with ","
 
 		// Execute edit
 		$r = perform_edit($edit_fields,$r);

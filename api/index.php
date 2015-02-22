@@ -184,6 +184,10 @@ function process_api(){
 							$r = list_alias($p,$r);
 						break;
 						
+						case 'delete_alias':
+							$r = delete_alias($p,$r);
+						break;
+						
 						// Active
 						case 'edit_active':
 							$r = edit_active($p,$r);
