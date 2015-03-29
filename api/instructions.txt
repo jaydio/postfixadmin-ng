@@ -1,9 +1,9 @@
 &token=d8a80dc312d3fdf149b9c7abbc6dd6019682245c068ce64e06d52ece0ca23610
 or
-&user=pfapi@mymobilepatron.com&pass=hedca5e2
+&user=pfapi@mymobilepatron.com&pass=*********
 
 
-http://localhost/hosted/admin/postfixadmin/api/?call=list_domains&search=mm
+/postfixadmin/api/?call=list_domains&search=mm
 
 
 

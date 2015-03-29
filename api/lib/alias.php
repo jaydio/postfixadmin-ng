@@ -36,7 +36,7 @@ function create_alias($p,$r){
 	return($r);
 }
 
-function edit_ailias($p,$r){
+function edit_alias($p,$r){
 	//Define requirements
 	$required = array();
 	$required['domain'] = array('type'=>'domain_nolookup','desc'=>'existing domain name');
@@ -57,7 +57,7 @@ function edit_ailias($p,$r){
 		// Set values
 		$edit_fields['values']['active'] = $p['active']; 	//bool
 		$edit_fields['values']['domain'] = $p['domain'];	//domain.com
-		$edit_fields['values']['goto'] = $p['goto'];		//list separated with "\r\n"
+		$edit_fields['values']['goto'] = $p['goto'];		//list separated with ","
 
 		// Execute edit
 		$r = perform_edit($edit_fields,$r);
