@@ -9,6 +9,7 @@ class MailboxHandler extends PFAHandler {
     protected $db_table = 'mailbox';
     protected $id_field = 'username';
     protected $domain_field = 'domain';
+    protected $searchfields = array('username');
 
     # init $this->struct, $this->db_table and $this->id_field
     protected function initStruct() {
@@ -412,7 +413,7 @@ class MailboxHandler extends PFAHandler {
         $fBody = Config::read('welcome_text');
 
         if (!smtp_mail ($fTo, $fFrom, $fSubject, $fBody)) {
-            $this->errormsg[] = Config::lang('pSendmail_result_error');
+            $this->errormsg[] = Config::lang_f('pSendmail_result_error', $this->id);
             return false;
         }
 

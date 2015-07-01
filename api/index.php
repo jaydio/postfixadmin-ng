@@ -12,8 +12,6 @@ require('./lib/delete.php');
 require('./lib/send.php');
 require('./lib/list.php');
 
-
-
 define('DEFAULT_OUTPUT_FORMAT','json_pretty');					//pre|json|json_pretty
 define('ADMIN_TOKEN_FILE','./lib/token/.latocfile');			//protect directory
 define('ADMIN_TOKEN_EXPIRE',180);								//seconds to expire token
@@ -29,8 +27,6 @@ $_SESSION['sessid']['roles'] = array('user','admin','global-admin');
 if(is_file(ADMIN_TOKEN_FILE)) if(time()-filemtime(ADMIN_TOKEN_FILE) >= ADMIN_TOKEN_EXPIRE) unlink(ADMIN_TOKEN_FILE); touch(ADMIN_TOKEN_FILE);
 
 define('OUTPUT_FORMAT',(isset($_GET['output']) ? (in_array($_GET['output'],array('pre','json','json_pretty')) ? $_GET['output'] : DEFAULT_OUTPUT_FORMAT) : DEFAULT_OUTPUT_FORMAT));
-
-
 
 //Can login with user and pass each time but for secondary calls (delete) a token must be used.
 //Token is output on login calls only

@@ -25,6 +25,7 @@ $PALANG['unknown'] = 'unknown';
 $PALANG['download_csv'] = 'Download this list as CSV file';
 $PALANG['missing_field'] = 'Field %s is missing';
 $PALANG['must_be_numeric'] = '%s must be numeric';
+$PALANG['must_be_numeric_bigger_than_null'] = '%s must be numeric and bigger than 0';
 $PALANG['must_be_boolean'] = '%s must be boolean';
 $PALANG['invalid_value_given'] = 'Invalid value given for %s';
 $PALANG['edit_not_allowed'] = 'You are not allowed to edit %s';
@@ -218,8 +219,8 @@ $PALANG['subject'] = 'Subject';
 $PALANG['pSendmail_subject_text'] = 'Welcome';
 $PALANG['pSendmail_body'] = 'Body';
 $PALANG['pSendmail_button'] = 'Send Message';
-$PALANG['pSendmail_result_error'] = 'Unable to send email!';
-$PALANG['pSendmail_result_success'] = 'Email sent!';
+$PALANG['pSendmail_result_error'] = 'Unable to send email to %s!';
+$PALANG['pSendmail_result_success'] = 'Email sent to %s.';
 
 $PALANG['pAdminMenu_list_admin'] = 'Admin List';
 $PALANG['pAdminMenu_list_domain'] = 'Domain List';
@@ -334,6 +335,8 @@ $PALANG['pInvalidMailRegex'] = "Invalid email address %s, fails regexp check";
 
 $PALANG['pFetchmail_welcome'] = 'Fetch mail for:';
 $PALANG['pFetchmail_new_entry'] = 'New entry';
+$PALANG['fetchmail_already_exists']         = 'This fetchmail job already exists!';
+$PALANG['fetchmail_does_not_exist']         = 'This fetchmail job does not exist!';
 $PALANG['pFetchmail_database_save_error'] = 'Could not save this entry in the database!';
 $PALANG['pFetchmail_database_save_success'] = 'Entry saved in database.';
 $PALANG['pFetchmail_error_invalid_id'] = 'No entry with ID %s found!';

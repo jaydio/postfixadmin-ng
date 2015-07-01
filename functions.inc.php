@@ -207,18 +207,31 @@ function check_domain ($domain) {
         // Look for an AAAA, A, or MX record for the domain
 
         if(function_exists('checkdnsrr')) {
+            $start = microtime(true); # check for slow nameservers, part 1
+
             // AAAA (IPv6) is only available in PHP v. >= 5
-            if (version_compare(phpversion(), "5.0.0", ">=")) {
-                if (checkdnsrr($domain,'AAAA')) return '';
+            if (version_compare(phpversion(), "5.0.0", ">=") && checkdnsrr($domain,'AAAA')) {
+                $retval = '';
+            } elseif (checkdnsrr($domain,'A')) {
+                $retval = '';
+            } elseif (checkdnsrr($domain,'MX')) {
+                $retval = '';
+            } else {
+                $retval = sprintf(Config::lang('pInvalidDomainDNS'), htmlentities($domain));
             }
-            if (checkdnsrr($domain,'A')) return '';
-            if (checkdnsrr($domain,'MX')) return '';
-            return sprintf(Config::lang('pInvalidDomainDNS'), htmlentities($domain));
+
+            $end = microtime(true); # check for slow nameservers, part 2
+            $time_needed = $end - $start;
+            if ($time_needed > 2) {
+                error_log("Warning: slow nameserver - lookup for $domain took $time_needed seconds");
+            }
+
+            return $retval;
         } else {
             return 'emailcheck_resolve_domain is enabled, but function (checkdnsrr) missing!';
         }
     }
-    
+
     return '';
 }
 
@@ -566,23 +579,6 @@ function check_owner ($username, $domain) {
     }
 }
 
-
-
-//
-// check_alias_owner
-// Action: Checks if the admin is the owner of the alias.
-// Call: check_alias_owner (string admin, string alias)
-//
-function check_alias_owner ($username, $alias) {
-    global $CONF;
-    if (authentication_has_role('global-admin')) return true;
-    $tmp = preg_split('/\@/', $alias);
-    if (($CONF['special_alias_control'] == 'NO') && array_key_exists($tmp[0], $CONF['default_aliases'])) {
-        return false;
-    } else {
-        return true;
-    }
-}
 
 
 /**
@@ -1626,7 +1622,7 @@ function db_where_clause($condition, $struct, $additional_raw_where = '', $searc
         die('db_where_cond: parameter $cond is not an array!');
     } elseif(!is_array($searchmode)) {
         die('db_where_cond: parameter $searchmode is not an array!');
-    } elseif (count($condition) == 0) {
+    } elseif (count($condition) == 0 && trim($additional_raw_where) == '') {
         die("db_where_cond: parameter is an empty array!"); # die() might sound harsh, but can prevent information leaks 
     } elseif(!is_array($struct)) {
         die('db_where_cond: parameter $struct is not an array!');

@@ -52,7 +52,13 @@ class DomainHandler extends PFAHandler {
                /*select*/ 'coalesce(__alias_count,0) - coalesce(__mailbox_count,0)  as alias_count',
                /*extrafrom*/ 'left join ( select count(*) as __alias_count, domain as __alias_domain from ' . table_by_key('alias') .
                              ' group by domain) as __alias on domain = __alias_domain'),
-           'mailboxes'       => pacol(  $super,     $super, 1,      'num' , 'mailboxes'                    , 'pAdminEdit_domain_aliases_text'   , Config::read('mailboxes') ),
+            'aliases_quot'  => pacol(   0,          0,      1,      'quot', 'aliases'                      , ''                                  , 0, '',
+                array('select' => db_quota_text(   '__alias_count - coalesce(__mailbox_count,0)', 'aliases', 'aliases_quot'))   ),
+            '_aliases_quot_percent' => pacol( 0, 0,      1,      'vnum', ''                   ,''                   , 0, '',
+                array('select' => db_quota_percent('__alias_count - coalesce(__mailbox_count,0)', 'aliases', '_aliases_quot_percent'))   ),
+
+            # Mailboxes
+           'mailboxes'       => pacol(  $super,     $super, 0,      'num' , 'mailboxes'                    , 'pAdminEdit_domain_aliases_text'   , Config::read('mailboxes') ),
            'mailbox_count'   => pacol(  0,          0,      1,      'vnum', ''                             , ''                                 , '', '',
                /*not_in_db*/ 0,
                /*dont_write_to_db*/ 1,
@@ -97,6 +103,7 @@ class DomainHandler extends PFAHandler {
             $this->msg['store_error'] = 'pAdminEdit_domain_result_error';
             $this->msg['successmessage'] = 'domain_updated';
         }
+        $this->msg['can_create'] = $this->is_superadmin;
     }
 
     public function webformConfig() {

@@ -1,15 +1,9 @@
+USAGE/PARAMETERS:
+
 &token=d8a80dc312d3fdf149b9c7abbc6dd6019682245c068ce64e06d52ece0ca23610
+
 or
-&user=pfapi@mymobilepatron.com&pass=*********
 
+&user=pfapi@example.com&pass=*********
 
-/postfixadmin/api/?call=list_domains&search=mm
-
-
-
-Mods:
-Change line 420 of ../functions.inc.php
-from:
-        die("Error: " . join("\n", $handler->errormsg));
-to:
-        return(false);
+URI: /postfixadmin/api/?call=list_domains&search=mm

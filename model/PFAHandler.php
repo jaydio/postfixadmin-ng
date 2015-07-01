@@ -46,6 +46,11 @@ abstract class PFAHandler {
     # disable for "edit password" forms
     protected $skip_empty_pass = true;
 
+    # fields to search when using simple search ("?search[_]=...")
+    # array with one or more fields to search (all fields will be OR'ed in the query)
+    # searchmode is always 'contains' (using LIKE "%searchterm%")
+    protected $searchfields = array();
+
     /**
      * internal variables - filled by methods of *Handler
      */
@@ -111,7 +116,11 @@ abstract class PFAHandler {
     # messages used in various functions
     # (stored separately to make the functions reuseable)
     # filled by initMsg()
-    protected $msg = array();
+    protected $msg = array(
+        'can_create' => True,
+        'confirm_delete' => 'confirm',
+        'list_header' => '', # headline used in list view
+    );
 
     # called via another *Handler class? (use calledBy() to set this information)
     protected $called_by = '';
@@ -186,6 +195,8 @@ abstract class PFAHandler {
         }
 
         $this->initMsg();
+        $this->msg['id_field'] = $this->id_field;
+        $this->msg['show_simple_search'] = count($this->searchfields) > 0;
     }
 
     /**
@@ -215,6 +226,7 @@ abstract class PFAHandler {
      * available values for the "type" column:
      *    text  one line of text
      *   *vtxt  "virtual" line of text, coming from JOINs etc.
+     *    html  raw html (use carefully, won't get auto-escaped by smarty! Don't use with user input!)
      *    pass  password (will be encrypted with pacrypt())
      *    num   number
      *    txtl  text "list" - array of one line texts
@@ -414,6 +426,8 @@ abstract class PFAHandler {
                             if (!$this->{$func}($key, $values[$key])) $valid = false;
                         }
 
+                        if (isset($this->errormsg[$key]) && $this->errormsg[$key] != '') $valid = false;
+
                         if ($valid) {
                             $this->values[$key] = $values[$key];
                         }
@@ -590,6 +604,14 @@ abstract class PFAHandler {
         }
 
         if (is_array($condition)) {
+            if (isset($condition['_']) && count($this->searchfields) > 0) {
+                $simple_search = array();
+                foreach ($this->searchfields as $field) {
+                    $simple_search[] = "$field LIKE '%" . escape_string($condition['_']) . "%'";
+                }
+                $additional_where .= " AND ( " . join(" OR ", $simple_search) . " ) ";
+                unset($condition['_']);
+            }
             $where = db_where_clause($condition, $this->struct, $additional_where, $searchmode);
         } else {
             if ($condition == "") $condition = '1=1';
@@ -661,6 +683,8 @@ abstract class PFAHandler {
             foreach ($condition as $key => $value) {
                 # allow only access to fields the user can access to avoid information leaks via search parameters
                 if (isset($this->struct[$key]) && ($this->struct[$key]['display_in_list'] || $this->struct[$key]['display_in_form']) ) {
+                    $real_condition[$key] = $value;
+                } elseif (($key == '_') && count($this->searchfields)) {
                     $real_condition[$key] = $value;
                 } else {
                     $this->errormsg[] = "Ignoring unknown search field $key";
