@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: viewlog.php 1601 2013-12-08 19:41:01Z christian_boltz $ 
+ * @version $Id: viewlog.php 1822 2015-12-06 23:27:45Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: viewlog.php
@@ -77,7 +77,8 @@ if ($error != 1)
 for ($i = 0; $i < count ($tLog); $i++)
 	$tLog[$i]['action'] = $PALANG ['pViewlog_action_'.$tLog [$i]['action']];
 
-$smarty->assign ('select_options', select_options ($list_domains, array ($fDomain)), false);
+$smarty->assign ('domain_list', $list_domains);
+$smarty->assign ('domain_selected', $fDomain);
 $smarty->assign ('tLog', $tLog,false);
 $smarty->assign ('fDomain', $fDomain);
 $smarty->assign ('smarty_template', 'viewlog');

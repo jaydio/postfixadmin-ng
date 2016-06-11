@@ -1,5 +1,5 @@
 <?php
-# $Id: pl.lang 1734 2014-11-02 23:13:35Z christian_boltz $
+# $Id: pl.lang 1821 2015-10-20 16:08:17Z gingerdog $
 //
 // Language file Polish
 // by Jarek
@@ -211,6 +211,9 @@ $PALANG['pViewlog_action_create_admin'] = 'create admin'; # XXX
 $PALANG['pViewlog_action_edit_admin'] = 'edit admin'; # XXX
 $PALANG['pViewlog_action_delete_admin'] = 'delete admin'; # XXX
 $PALANG['pViewlog_action_edit_vacation'] = 'edit vacation'; # XXX
+$PALANG['pViewlog_action_create_fetchmail'] = 'create fetchmail job'; # XXX
+$PALANG['pViewlog_action_edit_fetchmail'] = 'edit fetchmail job'; # XXX
+$PALANG['pViewlog_action_delete_fetchmail'] = 'delete fetchmail job'; # XXX
 
 $PALANG['pViewlog_result_error'] = 'Nie można odszukać logów!';
 
@@ -301,7 +304,7 @@ $PALANG['pUsersMain_edit_alias'] = 'Zmień przekierowania wiadomości.';
 $PALANG['pUsersMain_password'] = 'Zmień aktualne hasło.';
 
 
-$PALANG['pUsersVacation_welcome'] = 'Automatyczną odpowiedź.';
+$PALANG['pUsersVacation_welcome'] = 'Automatyczna odpowiedź.';
 $PALANG['pUsersVacation_welcome_text'] = 'Masz już skonfigurowaną automatyczną odpowiedź! (%s)'; # XXX Text changed to: 'Auto response for %s is active!'
 $PALANG['pUsersVacation_subject_text'] = 'Poza biurem';
 $PALANG['message'] = 'Wiadomość';

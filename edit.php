@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: edit.php 1717 2014-11-01 20:10:25Z christian_boltz $ 
+ * @version $Id: edit.php 1842 2016-05-20 20:42:04Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: edit.php
@@ -93,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 
 
 if ($_SERVER['REQUEST_METHOD'] == "POST") {
+    if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
     $inp_values = safepost('value', array() );
 
     foreach($form_fields as $key => $field) {

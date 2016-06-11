@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: sendmail.php 1558 2013-11-10 15:57:32Z christian_boltz $ 
+ * @version $Id: sendmail.php 1842 2016-05-20 20:42:04Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: sendmail.php
@@ -39,6 +39,8 @@ $smtp_from_email = smtp_get_admin_email();
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+   if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
    $fTo = safepost('fTo');
    $fFrom = $smtp_from_email;
    $fSubject = safepost('fSubject');

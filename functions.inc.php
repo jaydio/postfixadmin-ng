@@ -8,14 +8,15 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: functions.inc.php 1731 2014-11-02 22:45:22Z christian_boltz $ 
+ * @version $Id: functions.inc.php 1853 2016-05-22 19:58:54Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: functions.inc.php
  * Contains re-usable code.
  */
 
-$version = '2.92';
+$version = '2.93';
+$min_db_version = 1835;  # update (at least) before a release with the latest function numbrer in upgrade.php
 
 /**
  * check_session
@@ -198,7 +199,7 @@ function language_selector() {
  * TODO: skip DNS check if the domain exists in PostfixAdmin?
  */
 function check_domain ($domain) {
-    if (!preg_match ('/^([-0-9A-Z]+\.)+' . '([0-9A-Z]){2,13}$/i', ($domain))) {
+    if (!preg_match ('/^([-0-9A-Z]+\.)+' . '([-0-9A-Z]){2,13}$/i', ($domain))) {
         return sprintf(Config::lang('pInvalidDomainRegex'), htmlentities($domain));
     }
 
@@ -301,6 +302,9 @@ function escape_string ($string) {
         }
         if ($CONF['database_type'] == "mysqli") {
             $escaped_string = mysqli_real_escape_string($link, $string);
+        }
+        if (db_sqlite()) {
+            $escaped_string = SQLite3::escapeString($string);
         }
         if (db_pgsql()) {
             // php 5.2+ allows for $link to be specified.
@@ -490,7 +494,9 @@ function create_page_browser($idxfield, $querypart) {
     if (db_pgsql()) {
         $initcount = "CREATE TEMPORARY SEQUENCE rowcount MINVALUE 0";
     }
-    $result = db_query($initcount);
+    if (!db_sqlite()) {
+        $result = db_query($initcount);
+    }
 
     # get labels for relevant rows (first and last of each page)
     $page_size_zerobase = $page_size - 1;
@@ -507,6 +513,15 @@ function create_page_browser($idxfield, $querypart) {
             ) idx WHERE MOD(idx.row, $page_size) IN (0,$page_size_zerobase) OR idx.row = $count_results
         "; 
     }
+
+    if (db_sqlite()) {
+        $query = "
+            WITH idx AS (SELECT * $querypart)
+                SELECT $idxfield AS label, (SELECT (COUNT(*) - 1) FROM idx t1 WHERE t1.$idxfield <= t2.$idxfield) AS row
+                FROM idx t2
+                WHERE (row % $page_size) IN (0,$page_size_zerobase) OR row = $count_results";
+    }
+
 #   echo "<p>$query";
 
 # TODO: $query is MySQL-specific
@@ -852,7 +867,6 @@ function validate_password($password) {
  */
 function pacrypt ($pw, $pw_db="") {
     global $CONF;
-    $pw = stripslashes($pw);
     $password = "";
     $salt = "";
 
@@ -1122,7 +1136,10 @@ function smtp_mail ($to, $from, $data, $body = "") {
     $smtpd_server = $CONF['smtp_server'];
     $smtpd_port = $CONF['smtp_port'];
     //$smtp_server = $_SERVER["SERVER_NAME"];
-    $smtp_server = php_uname("n");
+    $smtp_server = php_uname('n');
+    if(!empty($CONF['smtp_client'])) {
+        $smtp_server = $CONF['smtp_client'];
+    }
     $errno = "0";
     $errstr = "0";
     $timeout = "30";
@@ -1249,6 +1266,17 @@ function db_connect ($ignore_errors = 0) {
         } else {
             $error_text .= "<p />DEBUG INFORMATION:<br />MySQL 4.1 functions not available! (php5-mysqli installed?)<br />database_type = 'mysqli' in config.inc.php, are you using a different database? $DEBUG_TEXT";
         }
+    } elseif (db_sqlite()) {
+        if (class_exists ("SQLite3")) {
+            if ($CONF['database_name'] == '' || !is_dir(dirname($CONF['database_name'])) || !is_writable(dirname($CONF['database_name']))) {
+                $error_text .= ("<p />DEBUG INFORMATION<br />Connect: given database path does not exist, is not writable, or \$CONF['database_name'] is empty.");
+            } else {
+                $link = new SQLite3($CONF['database_name']) or $error_text .= ("<p />DEBUG INFORMATION<br />Connect: failed to connect to database. $DEBUG_TEXT");
+                $link->createFunction('base64_decode', 'base64_decode');
+            }
+        } else {
+            $error_text .= "<p />DEBUG INFORMATION:<br />SQLite functions not available! (php5-sqlite installed?)<br />database_type = 'sqlite' in config.inc.php, are you using a different database? $DEBUG_TEXT";
+        }
     } elseif (db_pgsql()) {
         if (function_exists ("pg_pconnect")) {
 			if(!isset($CONF['database_port'])) {
@@ -1299,7 +1327,7 @@ function db_get_boolean($bool) {
             return 't';
         }  
         return 'f';
-    } elseif(Config::Read('database_type') == 'mysql' || Config::Read('database_type') == 'mysqli') {
+    } elseif(Config::Read('database_type') == 'mysql' || Config::Read('database_type') == 'mysqli' || db_sqlite()) {
         if($bool) {
             return 1;  
         } 
@@ -1317,10 +1345,21 @@ function db_get_boolean($bool) {
  * @return string
  */
 function db_quota_text($count, $quota, $fieldname) {
-    return " CASE $quota
-        WHEN '-1' THEN coalesce($count,0)
-        ELSE CONCAT(coalesce($count,0), ' / ', $quota)   
-    END AS $fieldname";
+    if (db_pgsql() || db_sqlite()) {
+        // SQLite and PostgreSQL use || to concatenate strings
+        return " CASE $quota
+            WHEN '-1' THEN (coalesce($count,0) || ' / -')
+            WHEN '0' THEN (coalesce($count,0) || ' / " . escape_string(html_entity_decode('&infin;')) . "')
+            ELSE (coalesce($count,0) || ' / ' || $quota)
+        END AS $fieldname";
+    }
+    else {
+        return " CASE $quota
+            WHEN '-1' THEN CONCAT(coalesce($count,0), ' / -')
+            WHEN '0' THEN CONCAT(coalesce($count,0), ' / ', '" . escape_string(html_entity_decode('&infin;')) . "')
+            ELSE CONCAT(coalesce($count,0), ' / ', $quota)
+        END AS $fieldname";
+    }
 }
 
 /**
@@ -1331,8 +1370,9 @@ function db_quota_text($count, $quota, $fieldname) {
  * @return string
  */
 function db_quota_percent($count, $quota, $fieldname) {
-    return " CASE $quota   
+    return " CASE $quota
         WHEN '-1' THEN -1
+        WHEN '0' THEN -1
         ELSE round(100 * coalesce($count,0) / $quota)
     END AS $fieldname";
 }
@@ -1342,6 +1382,17 @@ function db_quota_percent($count, $quota, $fieldname) {
  */
 function db_pgsql() {
     if(Config::Read('database_type')=='pgsql') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+/**
+ * returns true if SQLite is used, false otherwise
+ */
+function db_sqlite() {
+    if(Config::Read('database_type')=='sqlite') {
         return true;
     } else {
         return false;
@@ -1370,6 +1421,8 @@ function db_query ($query, $ignore_errors = 0) {
         or $error_text = "Invalid query: " . mysql_error($link);
     if ($CONF['database_type'] == "mysqli") $result = @mysqli_query ($link, $query) 
         or $error_text = "Invalid query: " . mysqli_error($link);
+    if (db_sqlite()) $result = @$link->query($query)
+        or $error_text = "Invalid query: " . $link->lastErrorMsg();
     if (db_pgsql()) {
         $result = @pg_query ($link, $query) 
             or $error_text = "Invalid query: " . pg_last_error();
@@ -1381,7 +1434,18 @@ function db_query ($query, $ignore_errors = 0) {
     }
 
     if ($error_text == "") {
-        if (preg_match("/^SELECT/i", trim($query))) {
+        if (db_sqlite()) {
+            if($result->numColumns()) {
+                // Query returned something
+                $num_rows = 0;
+                while(@$result->fetchArray(SQLITE3_ASSOC)) $num_rows++;
+                $result->reset();
+                $number_rows = $num_rows;
+            } else {
+                // Query was UPDATE, DELETE or INSERT
+                $number_rows = $link->changes();
+            }
+        } elseif (preg_match("/^SELECT/i", trim($query))) {
             // if $query was a SELECT statement check the number of rows with [database_type]_num_rows ().
             if ($CONF['database_type'] == "mysql") $number_rows = mysql_num_rows ($result);
             if ($CONF['database_type'] == "mysqli") $number_rows = mysqli_num_rows ($result);
@@ -1414,6 +1478,7 @@ function db_row ($result) {
     $row = "";
     if ($CONF['database_type'] == "mysql") $row = mysql_fetch_row ($result);
     if ($CONF['database_type'] == "mysqli") $row = mysqli_fetch_row ($result);
+    if (db_sqlite()                       ) $row = $result->fetchArray(SQLITE3_NUM);
     if (db_pgsql()                        ) $row = pg_fetch_row ($result);
     return $row;
 }
@@ -1429,6 +1494,7 @@ function db_array ($result) {
     $row = "";
     if ($CONF['database_type'] == "mysql") $row = mysql_fetch_array ($result);
     if ($CONF['database_type'] == "mysqli") $row = mysqli_fetch_array ($result);
+    if (db_sqlite()                       ) $row = $result->fetchArray();
     if (db_pgsql()                        ) $row = pg_fetch_array ($result);
     return $row;
 }
@@ -1444,6 +1510,7 @@ function db_assoc ($result) {
     $row = "";
     if ($CONF['database_type'] == "mysql") $row = mysql_fetch_assoc ($result);
     if ($CONF['database_type'] == "mysqli") $row = mysqli_fetch_assoc ($result);
+    if (db_sqlite()                       ) $row = $result->fetchArray(SQLITE3_ASSOC);
     if (db_pgsql()                        ) $row = pg_fetch_assoc ($result);
     return $row;
 }
@@ -1485,7 +1552,11 @@ function db_insert ($table, $values, $timestamp = array('created', 'modified') )
     }
 
     foreach($timestamp as $key) {
-        $values[$key] = "now()";
+        if (db_sqlite()) {
+            $values[$key] = "datetime('now')";
+        } else {
+            $values[$key] = "now()";
+        }
     }
 
     $sql_values = "(" . implode(",",escape_string(array_keys($values))).") VALUES (".implode(",",$values).")";
@@ -1529,7 +1600,11 @@ function db_update_q ($table, $where, $values, $timestamp = array('modified') ) 
     }
 
     foreach($timestamp as $key) {
-        $sql_values[$key] = escape_string($key) . "=now()";
+        if (db_sqlite()) {
+            $sql_values[$key] = escape_string($key) . "=datetime('now')";
+        } else {
+            $sql_values[$key] = escape_string($key) . "=now()";
+        }
     }
 
     $sql="UPDATE $table SET ".implode(",",$sql_values)." WHERE $where";
@@ -1680,7 +1755,34 @@ function table_by_key ($table_key) {
     return $CONF['database_prefix'].$table;
 }
 
+/*
+ * check if the database layout is up to date
+ * returns the current 'version' value from the config table
+ * if $error_out is True (default), die() with a message that recommends to run setup.php.
+ */
+function check_db_version($error_out = True) {
+    global $min_db_version;
 
+    $table = table_by_key('config');
+
+    $sql = "SELECT value FROM $table WHERE name = 'version'";
+    $r = db_query($sql);
+
+    if($r['rows'] == 1) {
+        $row = db_assoc($r['result']);
+        $dbversion = $row['value'];
+    } else {
+        $dbversion = 0;
+        db_query("INSERT INTO $table (name, value) VALUES ('version', '0')", 0, '');
+    }
+
+    if ( ($dbversion < $min_db_version) && $error_out == True) {
+        echo "ERROR: The PostfixAdmin database layout is outdated (you have r$dbversion, but r$min_db_version is expected).\nPlease run setup.php to upgrade the database.\n";
+        exit(1);
+    }
+
+    return $dbversion;
+}
 
 /*
    Called after an alias_domain has been deleted in the DBMS.
@@ -1753,9 +1855,9 @@ function gen_show_status ($show_alias) {
             list(/*NULL*/,$stat_domain) = explode('@',$g);
             $stat_delimiter = "";
 			if (!empty($CONF['recipient_delimiter'])) {
-				$stat_delimiter = "OR address = '" . preg_replace($delimiter_regex, "@", $g) . "'";
+				$stat_delimiter = "OR address = '" . escape_string(preg_replace($delimiter_regex, "@", $g)) . "'";
 			}
-			$stat_result = db_query ("SELECT address FROM $table_alias WHERE address = '$g' OR address = '@$stat_domain' $stat_delimiter");
+			$stat_result = db_query ("SELECT address FROM $table_alias WHERE address = '" . escape_string($g) . "' OR address = '@" . escape_string($stat_domain) . "' $stat_delimiter");
             if ($stat_result['rows'] == 0) {
                 $stat_ok = 0;
             }

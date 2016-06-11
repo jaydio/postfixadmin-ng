@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: broadcast-message.php 1695 2014-10-09 11:56:10Z christian_boltz $ 
+ * @version $Id: broadcast-message.php 1842 2016-05-20 20:42:04Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: broadcast-message.php
@@ -38,6 +38,8 @@ $smtp_from_email = smtp_get_admin_email();
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+   if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
    if (empty($_POST['subject']) || empty($_POST['message']) || empty($_POST['name']))
    {
       $error = 1;

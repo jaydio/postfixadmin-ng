@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: edit-alias.php 1558 2013-11-10 15:57:32Z christian_boltz $ 
+ * @version $Id: edit-alias.php 1842 2016-05-20 20:42:04Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: edit-alias.php
@@ -52,6 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] == "GET")
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+    if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
     // user clicked on cancel button
     if(isset($_POST['fCancel'])) {
         header("Location: main.php");

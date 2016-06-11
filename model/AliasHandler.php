@@ -1,5 +1,5 @@
 <?php
-# $Id: AliasHandler.php 1735 2015-01-07 21:25:20Z christian_boltz $ 
+# $Id: AliasHandler.php 1777 2015-04-06 22:09:18Z christian_boltz $ 
 
 /** 
  * Handlers User level alias actions - e.g. add alias, get aliases, update etc.
@@ -306,8 +306,22 @@ class AliasHandler extends PFAHandler {
     public function getList($condition, $searchmode = array(), $limit=-1, $offset=-1) {
         # only list aliases that do not belong to mailboxes
         # TODO: breaks if $condition is an array
-        return parent::getList( "__mailbox_username IS NULL AND ( $condition )", $searchmode, $limit, $offset);
+        if ($condition != '') {
+            $condition = "  AND ( $condition ) ";
+        }
+        return parent::getList( "__mailbox_username IS NULL $condition", $searchmode, $limit, $offset);
     }
+
+    public function getPagebrowser($condition, $searchmode = array()) {
+        # only list aliases that do not belong to mailboxes
+        # TODO: breaks if $condition is an array
+        if ($condition != '') {
+            $condition = "  AND ( $condition ) ";
+        }
+        return parent::getPagebrowser( "__mailbox_username IS NULL $condition", $searchmode);
+    }
+
+
 
     protected function _validate_goto($field, $val) {
         if (count($val) == 0) {

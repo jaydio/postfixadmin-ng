@@ -8,7 +8,7 @@
  *
  * Further details on the project are available at http://postfixadmin.sf.net 
  *
- * @version $Id: vacation.php 1697 2014-10-13 20:50:22Z christian_boltz $
+ * @version $Id: vacation.php 1842 2016-05-20 20:42:04Z christian_boltz $
  * @license GNU GPL v2 or later.
  *
  * File: edit-vacation.php
@@ -103,6 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] == "GET") {
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+    if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
     if(isset($_POST['fCancel'])) {
         header ("Location: $Return_url");
         exit(0);

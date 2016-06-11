@@ -228,6 +228,7 @@ abstract class PFAHandler {
      *   *vtxt  "virtual" line of text, coming from JOINs etc.
      *    html  raw html (use carefully, won't get auto-escaped by smarty! Don't use with user input!)
      *    pass  password (will be encrypted with pacrypt())
+     *    b64p  password (will be stored with base64_encode() - but will NOT be decoded automatically)
      *    num   number
      *    txtl  text "list" - array of one line texts
      *   *vnum  "virtual" number, coming from JOINs etc.
@@ -238,7 +239,7 @@ abstract class PFAHandler {
      *    list  like enum, but allow multiple selections
      *   *quot  used / total quota ("5 / 10") - for field "quotausage", there must also be a "_quotausage_percent" (type vnum)
      * You can use custom types, but you'll have to add handling for them in *Handler and the smarty templates
-     * 
+     *
      * Field types marked with * will automatically be skipped in store().
      *
      * All database tables should have a 'created' and a 'modified' column.
@@ -408,7 +409,12 @@ abstract class PFAHandler {
                 }
             } else { # field is editable
                 if (isset($values[$key])) {
-                    if ($row['type'] != "pass" || strlen($values[$key]) > 0 || $this->new == 1 || $this->skip_empty_pass != true) { # skip on empty (aka unchanged) password on edit
+                    if (
+                        ($row['type'] != "pass" && $row['type'] != 'b64p') || # field  type is NOT 'pass' or 'b64p' - or -
+                        strlen($values[$key]) > 0 ||    # new value is not empty - or -
+                        $this->new == 1 ||              # create mode - or -
+                        $this->skip_empty_pass != true  # skip on empty (aka unchanged) password on edit
+                    ) {
 # TODO: do not skip "password2" if "password" is filled, but "password2" is empty
                         $valid = true; # trust input unless validator objects
 
@@ -486,6 +492,9 @@ abstract class PFAHandler {
                 case 'pass':
                     $db_values[$key] = pacrypt($db_values[$key]);
                     break;
+                case 'b64p':
+                    $db_values[$key] = base64_encode($db_values[$key]);
+                    break;
                 case 'quot':
                 case 'vnum':
                 case 'vtxt':
@@ -538,22 +547,18 @@ abstract class PFAHandler {
 
 
     /**
-     * read_from_db
+     * build_select_query
      *
-     * reads all fields specified in $this->struct from the database
-     * and auto-converts them to database-independent values based on the field type (see $colformat)
-     *
-     * calls $this->read_from_db_postprocess() to postprocess the result
+     * helper function to build the inner part of the select query
+     * can be used by read_from_db() and for generating the pagebrowser
      *
      * @param array or string - condition (an array will be AND'ed using db_where_clause, a string will be directly used)
      *                          (if you use a string, make sure it is correctly escaped!)
      *                        - WARNING: will be changed to array only in the future, with an option to include a raw string inside the array
      * @param array searchmode - operators to use (=, <, >) if $condition is an array. Defaults to = if not specified for a field.
-     * @param integer limit - maximum number of rows to return
-     * @param integer offset - number of first row to return
-     * @return array - rows (as associative array, with the ID as key)
+     * @return array - contains query parts
      */
-    protected function read_from_db($condition, $searchmode = array(), $limit=-1, $offset=-1) {
+    protected function build_select_query($condition, $searchmode) {
         $select_cols = array();
 
         $yes = escape_string(Config::lang('YES'));
@@ -561,8 +566,14 @@ abstract class PFAHandler {
 
         if (db_pgsql()) {
             $formatted_date = "TO_DATE(text(###KEY###), '" . escape_string(Config::Lang('dateformat_pgsql')) . "')";
+            # $base64_decode = "DECODE(###KEY###, 'base64')";
+        } elseif (db_sqlite()) {
+            $formatted_date = "strftime(###KEY###, '" . escape_string(Config::Lang('dateformat_mysql')) . "')";
+            # $base64_decode = "base64_decode(###KEY###)";
+
         } else {
             $formatted_date = "DATE_FORMAT(###KEY###, '"   . escape_string(Config::Lang('dateformat_mysql')) . "')";
+            # $base64_decode = "FROM_BASE64(###KEY###)"; # requires MySQL >= 5.6
         }
 
         $colformat = array(
@@ -571,6 +582,7 @@ abstract class PFAHandler {
             # 'bool' fields are always returned as 0/1, additonally _$field contains yes/no (already translated)
             'bool' => "CASE ###KEY### WHEN '" . db_get_boolean(true) . "' THEN '1'    WHEN '" . db_get_boolean(false) . "' THEN '0'   END as ###KEY###," .
                       "CASE ###KEY### WHEN '" . db_get_boolean(true) . "' THEN '$yes' WHEN '" . db_get_boolean(false) . "' THEN '$no' END as _###KEY###",
+            # 'b64p' => "$base64_decode AS ###KEY###",  # not available in MySQL < 5.6, therefore not decoding for any database
         );
 
         # get list of fields to display
@@ -618,7 +630,42 @@ abstract class PFAHandler {
             $where = " WHERE ( $condition ) $additional_where";
         }
 
-        $query = "SELECT $cols FROM $table $extrafrom $where ORDER BY " . $this->order_by;
+        return array(
+            'select_cols'       => " SELECT $cols ",
+            'from_where_order'  => " FROM $table $extrafrom $where ORDER BY " . $this->order_by,
+        );
+    }
+
+    /**
+     * getPagebrowser
+     *
+     * @param array or string condition (see build_select_query() for details)
+     * @param array searchmode - (see build_select_query() for details)
+     * @return array - pagebrowser keys ("aa-cz", "de-pf", ...)
+     */
+    public function getPagebrowser($condition, $searchmode) {
+        $queryparts = $this->build_select_query($condition, $searchmode);
+        return create_page_browser($this->label_field, $queryparts['from_where_order']);
+    }
+
+    /**
+     * read_from_db
+     *
+     * reads all fields specified in $this->struct from the database
+     * and auto-converts them to database-independent values based on the field type (see $colformat)
+     *
+     * calls $this->read_from_db_postprocess() to postprocess the result
+     *
+     * @param array or string condition -see build_select_query() for details
+     * @param array searchmode - see build_select_query() for details
+     * @param integer limit - maximum number of rows to return
+     * @param integer offset - number of first row to return
+     * @return array - rows (as associative array, with the ID as key)
+     */
+    protected function read_from_db($condition, $searchmode = array(), $limit=-1, $offset=-1) {
+        $queryparts = $this->build_select_query($condition, $searchmode);
+
+        $query = $queryparts['select_cols'] . $queryparts['from_where_order'];
 
         $limit  = (int) $limit; # make sure $limit and $offset are really integers
         $offset = (int) $offset;

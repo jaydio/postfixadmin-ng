@@ -8,7 +8,7 @@
  *
  * Further details on the project are available at http://postfixadmin.sf.net
  *
- * @version $Id$
+ * @version $Id: editactive.php 1782 2015-04-06 23:09:58Z christian_boltz $
  * @license GNU GPL v2 or later.
  *
  * File: delete.php

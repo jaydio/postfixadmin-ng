@@ -1,5 +1,7 @@
 <?php
-require_once ("$incpath/smarty/libs/Smarty.class.php");
+
+require_once(dirname(__FILE__) . '/smarty/libs/Autoloader.php');
+Smarty_Autoloader::register();
 
 /**
  * Turn on sanitisation of all data by default so it's not possible for XSS flaws to occur in PFA
@@ -11,9 +13,9 @@ class PFASmarty {
 
         //$this->template->debugging = true;
         $incpath = dirname(__FILE__);
-        $this->template->template_dir = $incpath.'/templates';
-        $this->template->compile_dir  = $incpath.'/templates_c';
-        $this->template->config_dir   = $incpath.'/'.$this->template->config_dir[0];
+        $this->template->setTemplateDir(dirname(__FILE__) . '/templates');
+        $this->template->setCompileDir(dirname(__FILE__) . '/templates_c');
+        $this->template->setConfigDir(dirname(__FILE__) . '/configs');
     }
 
     public function assign($key, $value, $sanitise = true) {
@@ -75,16 +77,6 @@ $smarty->assign ('version', $version);
 $smarty->assign ('boolconf_alias_domain', Config::bool('alias_domain'));
 $smarty->assign ('authentication_has_role', array ('global_admin' => authentication_has_role ('global-admin'), 'admin' => authentication_has_role ('admin'), 'user' => authentication_has_role ('user')));
 
-function select_options($aValues, $aSelected) {
-    $ret_val = '';
-    foreach ($aValues as $val) {
-        $ret_val .= '<option value="'.htmlentities($val).'"';
-        if (in_array ($val, $aSelected))
-            $ret_val .= ' selected="selected"';
-        $ret_val .= '>'.htmlentities($val).'</option>';
-    }
-    return $ret_val;
-}
 function eval_size ($aSize) {
 	if ($aSize == 0)	{$ret_val = Config::Lang('pOverview_unlimited'); }
 	elseif ($aSize < 0)	{$ret_val = Config::Lang('pOverview_disabled');  }

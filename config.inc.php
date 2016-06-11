@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: config.inc.php 1694 2014-10-07 16:11:49Z christian_boltz $ 
+ * @version $Id: config.inc.php 1833 2016-04-11 23:54:34Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: config.inc.php
@@ -78,8 +78,9 @@ function language_hook($PALANG, $language) {
 
 // Database Config
 // mysql = MySQL 3.23 and 4.0, 4.1 or 5
-// mysqli = MySQL 4.1+ 
+// mysqli = MySQL 4.1+ or MariaDB
 // pgsql = PostgreSQL
+// sqlite = SQLite 3
 $CONF['database_type'] = 'mysqli';
 $CONF['database_host'] = 'localhost';
 $CONF['database_user'] = 'postfix';
@@ -90,6 +91,8 @@ $CONF['database_name'] = 'postfix';
 // If you need to specify a different port for POSTGRESQL database connection
 //   uncomment and change the following
 // $CONF['database_port'] = '5432';
+// If sqlite is used, specify the database file path:
+//   $CONF['database_name'] = '/etc/postfix/sqlite/postfixadmin.db'
 
 // Here, if you need, you can customize table names.
 $CONF['database_prefix'] = '';
@@ -122,6 +125,11 @@ $CONF['admin_email'] = '';
 $CONF['smtp_server'] = 'localhost';
 $CONF['smtp_port'] = '25';
 
+// SMTP Client
+// Hostname (FQDN) of the server hosting Postfix Admin
+// Used in the HELO when sending emails from Postfix Admin
+$CONF['smtp_client'] = '';
+
 // Encrypt
 // In what way do you want the passwords to be crypted?
 // md5crypt = internal postfix admin md5
@@ -131,7 +139,10 @@ $CONF['smtp_port'] = '25';
 // mysql_encrypt = useful for PAM integration
 // authlib = support for courier-authlib style passwords
 // dovecot:CRYPT-METHOD = use dovecotpw -s 'CRYPT-METHOD'. Example: dovecot:CRAM-MD5
-//   (WARNING: don't use dovecot:* methods that include the username in the hash - you won't be able to login to PostfixAdmin in this case)
+//     IMPORTANT:
+//     - don't use dovecot:* methods that include the username in the hash - you won't be able to login to PostfixAdmin in this case
+//     - you'll need at least dovecot 2.1 for salted passwords ('doveadm pw' 2.0.x doesn't support the '-t' option)
+//     - dovecot 2.0.0 - 2.0.7 is not supported
 $CONF['encrypt'] = 'md5crypt';
 
 // In what flavor should courier-authlib style passwords be encrypted?
@@ -571,7 +582,7 @@ $CONF['xmlrpc_enabled'] = false;
 // file (config.local.php) instead of editing this file and override some
 // settings there.
 if (file_exists(dirname(__FILE__) . '/config.local.php')) {
-    include(dirname(__FILE__) . '/config.local.php');
+    include_once(dirname(__FILE__) . '/config.local.php');
 }
 
 //

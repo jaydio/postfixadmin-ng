@@ -1,6 +1,7 @@
 <div id="edit_form">
 <form name="edit_{$table}" method="post" action="">
 <input class="flat" type="hidden" name="table" value="{$table}" />
+<input class="flat" type="hidden" name="token" value="{$smarty.session.PFA_token|escape:"url"}" />
 
 <table>
 	<tr>
@@ -45,7 +46,7 @@
 							{html_checkboxes name="value[{$key}]" output=$struct.{$key}.options values=$struct.{$key}.options selected=$value_{$key} separator="<br />"}
 						</div>
 -->
-					{elseif $field.type == 'pass'}
+					{elseif $field.type == 'pass' || $field.type == 'b64p'}
 						<input class="flat" type="password" name="value[{$key}]" />
 					{elseif $field.type == 'txtl'}
 						<textarea class="flat" rows="10" cols="35" name="value[{$key}]">{foreach key=key2 item=field2 from=$value_{$key}}{$field2}
@@ -55,7 +56,13 @@
 					{/if}
 				{/if}	
 				</td>
-				<td>{$field.desc}</td>
+				<td>
+					{if $table == 'foo' && $key == 'bar'}
+						Special handling (td content) for {$table} / {$key}
+					{else}
+						{$field.desc}
+					{/if}
+				</td>
 				<td class="error_msg">{$fielderror.{$key}}</td>
 			</tr>
 		{/if}

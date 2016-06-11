@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: password.php 1662 2014-04-27 19:18:14Z christian_boltz $ 
+ * @version $Id: password.php 1842 2016-05-20 20:42:04Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: password.php
@@ -37,6 +37,8 @@ $pPassword_password_current_text = "";
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {
+    if (safepost('token') != $_SESSION['PFA_token']) die('Invalid token!');
+
     if(isset($_POST['fCancel'])) {
         header("Location: main.php");
         exit(0);

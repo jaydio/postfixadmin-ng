@@ -1,5 +1,5 @@
 <?php
-# $Id: VacationHandler.php 1610 2013-12-22 16:50:55Z christian_boltz $ 
+# $Id: VacationHandler.php 1845 2016-05-22 16:17:46Z christian_boltz $ 
 
 class VacationHandler extends PFAHandler {
 
@@ -21,7 +21,7 @@ class VacationHandler extends PFAHandler {
             'body'          => pacol(   1,          1,      0,      'text', 'pUsersVacation_body'           , ''                                , '' ),
             'activefrom'    => pacol(   1,          1,      1,      'text', 'pUsersVacation_activefrom'     , ''                                , '' ),
             'activeuntil'   => pacol(   1,          1,      1,      'text', 'pUsersVacation_activeuntil'    , ''                                , '' ),
-#           'cache'         => pacol(   0,          0,      0,      'text', ''                              , ''                                , '' ), # leftover from 2.2
+            'cache'         => pacol(   0,          0,      0,      'text', ''                              , ''                                , '' ), # leftover from 2.2
             'active'        => pacol(   1,          1,      1,      'bool', 'active'                        , ''                                 , 1 ),
             'created'       => pacol(   0,          0,      1,      'ts',   'created'                       , ''                                 ),
             'modified'      => pacol(   0,          0,      1,      'ts',   'last_modified'                 , ''                                 ),
@@ -32,6 +32,8 @@ class VacationHandler extends PFAHandler {
     protected function initMsg() {
         $this->msg['error_already_exists'] = 'pCreate_mailbox_username_text_error1'; # TODO: better error message
         $this->msg['error_does_not_exist'] = 'pCreate_mailbox_username_text_error1'; # TODO: better error message
+        $this->msg['confirm_delete'] = 'confirm_delete_vacation'; # unused?
+
         if ($this->new) {
             $this->msg['logname'] = 'edit_vacation';
             $this->msg['store_error'] = 'pVacation_result_error';
@@ -178,6 +180,7 @@ class VacationHandler extends PFAHandler {
             'active' => db_get_boolean(true),
             'activefrom' => $activeFrom,
             'activeuntil' => $activeUntil,
+            'cache' => '',
         );
 
         // is there an entry in the vacaton table for the user, or do we need to insert?

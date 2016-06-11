@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: login.php 1665 2014-05-01 22:52:47Z christian_boltz $ 
+ * @version $Id: login.php 1853 2016-05-22 19:58:54Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: login.php
@@ -34,6 +34,7 @@ if($CONF['configured'] !== true) {
     exit;
 }
 
+check_db_version(); # check if the database layout is up to date (and error out if not)
 
 if ($_SERVER['REQUEST_METHOD'] == "POST")
 {

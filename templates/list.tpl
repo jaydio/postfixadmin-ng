@@ -51,7 +51,8 @@
     <td>&nbsp;</td>
 </tr>
 
-{foreach from=$items item=item}
+{foreach key=itemkey from=$RAW_items item=RAW_item}
+    {assign "item" $items.{htmlentities($itemkey, $smarty.const.ENT_QUOTES, 'UTF-8', false)}} {* array keys in $items are escaped using htmlentities(), see smarty.inc.php *}
     {#tr_hilightoff#}
 
     {foreach key=key item=field from=$struct}
@@ -65,7 +66,7 @@
             {/if}
 
             {if $table == 'foo' && $key == 'bar'}
-                <td>Special handling (complete table row) for {$table} / {$key}</td></tr>
+                <td>Special handling (complete table row) for {$table} / {$key}</td>
             {else}
                 <td>
                     {if $table == 'foo' && $key == 'bar'}
@@ -74,13 +75,17 @@
                         <a href="list-virtual.php?domain={$item.target_domain|escape:"url"}">{$item.target_domain}</a>
 {*                    {elseif $table == 'domain' && $key == 'domain'}
                         <a href="list.php?table=domain&domain={$item.domain|escape:"url"}">{$item.domain}</a>
-*}                        
+*}
                     {elseif $key == 'active'}
-                        <a href="{#url_editactive#}{$table}&amp;id={$item.$id_field|escape:"url"}&amp;active={if ($item.active==0)}1{else}0{/if}&amp;token={$smarty.session.PFA_token|escape:"url"}">{$item._active}</a>
+                        {if $item._can_edit}
+                            <a href="{#url_editactive#}{$table}&amp;id={$RAW_item.$id_field|escape:"url"}&amp;active={if ($item.active==0)}1{else}0{/if}&amp;token={$smarty.session.PFA_token|escape:"url"}">{$item._active}</a>
+                        {else}
+                            {$item._active}
+                        {/if}
                     {elseif $field.type == 'bool'}
                         {assign "tmpkey" "_{$key}"}{$item.{$tmpkey}}
                     {elseif $field.type == 'list'}
-                        {foreach key=key2 item=field2 from=$value_{$key}}<p>{$field2} {/foreach}
+                        {foreach key=key2 item=field2 from=$item.$key}{$field2}<br> {/foreach}
                     {elseif $field.type == 'pass'}
                         (hidden)
                     {elseif $field.type == 'quot'}
@@ -98,13 +103,14 @@
                             <div class="quota_bg"></div></div>
                             <div class="quota_text quota_text_{$quota_level}">{$linktext}</div>
                         {else}
-                            {$item[$key]}
+                            <div class="quota_bg quota_no_border"></div></div>
+                            <div class="quota_text">{$linktext}</div>
                         {/if}
 
                     {elseif $field.type == 'txtl'}
                         {foreach key=key2 item=field2 from=$item.$key}{$field2}<br> {/foreach}
                     {elseif $field.type == 'html'}
-						{$RAW_items.{$item.{$msg.id_field}}.$key}
+                        {$RAW_item.$key}
                     {else}
                         {$linktext}
                     {/if}
@@ -113,8 +119,8 @@
         {/if}
     {/foreach}
 
-    <td>{if $item._can_edit}<a href="edit.php?table={$table|escape:"url"}&amp;edit={$item.$id_field|escape:"url"}">{$PALANG.edit}</a>{else}&nbsp;{/if}</td>
-    <td>{if $item._can_delete}<a href="{#url_delete#}?table={$table}&amp;delete={$item.$id_field|escape:"url"}&amp;token={$smarty.session.PFA_token|escape:"url"}" 
+    <td>{if $item._can_edit}<a href="edit.php?table={$table|escape:"url"}&amp;edit={$RAW_item.$id_field|escape:"url"}">{$PALANG.edit}</a>{else}&nbsp;{/if}</td>
+    <td>{if $item._can_delete}<a href="{#url_delete#}?table={$table}&amp;delete={$RAW_item.$id_field|escape:"url"}&amp;token={$smarty.session.PFA_token|escape:"url"}"
         onclick="return confirm ('{$PALANG.{$msg.confirm_delete}|replace:'%s':$item.$id_field}')">{$PALANG.del}</a>{else}&nbsp;{/if}</td>
     </tr>
 {/foreach}

@@ -1,5 +1,5 @@
 <?php
-# $Id$
+# $Id: FetchmailHandler.php 1824 2016-02-04 22:30:06Z christian_boltz $
 
 /**
  * Handler for fetchmail jobs
@@ -21,7 +21,7 @@ class FetchmailHandler extends PFAHandler {
         $this->struct=array(
             # field name                allow       display in...   type    $PALANG label                     $PALANG description                 default / options / ...
             #                           editing?    form    list
-            'id'            => pacol(   0,          0,      1,      'num' , ''                              , ''                                ),
+            'id'            => pacol(   0,          0,      1,      'num' , ''                              , ''                                , '', array(), 0, 1),
             'domain'        => pacol(   0,          0,      1,      'text', ''                              , ''                                ),
             'mailbox'       => pacol(   1,          1,      1,      'enum', 'pFetchmail_field_mailbox'      , 'pFetchmail_desc_mailbox'         ), # mailbox list
             'src_server'    => pacol(   1,          1,      1,      'text', 'pFetchmail_field_src_server'   , 'pFetchmail_desc_src_server'      ),

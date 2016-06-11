@@ -1,5 +1,5 @@
 <?php
-# $Id: AliasdomainHandler.php 1586 2013-11-16 20:02:14Z christian_boltz $
+# $Id: AliasdomainHandler.php 1771 2015-04-06 13:29:28Z christian_boltz $
 
 /**
  * Handlers User level alias actions - e.g. add alias, get aliases, update etc.
@@ -64,6 +64,8 @@ class AliasdomainHandler extends PFAHandler {
     protected function initMsg() {
         $this->msg['error_already_exists'] = 'alias_domain_already_exists';
         $this->msg['error_does_not_exist'] = 'alias_domain_does_not_exist';
+        $this->msg['confirm_delete'] = 'confirm_delete_aliasdomain';
+
         if ($this->new) {
             $this->msg['logname'] = 'create_alias_domain';
             $this->msg['store_error'] = 'alias_domain_create_failed';

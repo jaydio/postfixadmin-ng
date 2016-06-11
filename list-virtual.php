@@ -8,7 +8,7 @@
  * 
  * Further details on the project are available at http://postfixadmin.sf.net 
  * 
- * @version $Id: list-virtual.php 1731 2014-11-02 22:45:22Z christian_boltz $ 
+ * @version $Id: list-virtual.php 1822 2015-12-06 23:27:45Z christian_boltz $ 
  * @license GNU GPL v2 or later. 
  * 
  * File: list-virtual.php
@@ -49,7 +49,7 @@ if (count($list_domains) == 0) {
     } else {
         flash_error($PALANG['no_domains_for_this_admin']);
     }
-    header("Location: list-domain.php"); # no domains (for this admin at least) - redirect to domain list
+    header("Location: list.php?table=domain"); # no domains (for this admin at least) - redirect to domain list
     exit;
 }
 
@@ -62,14 +62,14 @@ if ((is_array ($list_domains) and sizeof ($list_domains) > 0)) {
 if(!in_array($fDomain, $list_domains)) {
     flash_error( $PALANG['invalid_parameter'] );
     unset($_SESSION['list-virtual:domain']);
-    header("Location: list-domain.php"); # invalid domain, or not owned by this admin
+    header("Location: list.php?table=domain"); # invalid domain, or not owned by this admin
     exit;
 }
 
 if (!check_owner(authentication_get_username(), $fDomain)) { 
     flash_error( $PALANG['invalid_parameter'] . " If you see this message, please open a bugreport"); # this check is most probably obsoleted by the in_array() check above
     unset($_SESSION['list-virtual:domain']);
-    header("Location: list-domain.php"); # domain not owned by this admin
+    header("Location: list.php?table=domain"); # domain not owned by this admin
     exit(0);
 }
 
@@ -142,12 +142,6 @@ if (count($search) == 0 || !isset($search['_'])) {
     $list_param = "(address LIKE '%$searchterm%' OR goto LIKE '%$searchterm%')";
 }
 
-$alias_pagebrowser_query = "
-    FROM $table_alias
-    WHERE $sql_domain AND NOT EXISTS(SELECT 1 FROM $table_mailbox WHERE username=$table_alias.address) AND ( $list_param )
-    ORDER BY address 
-";
-
 $handler = new AliasHandler(0, $admin_username);
 $formconf = $handler->webformConfig(); # might change struct
 $alias_data = array(
@@ -160,6 +154,7 @@ $alias_data['struct']['on_vacation']['display_in_list'] = 0;
 $alias_data['msg']['show_simple_search'] = False; # hide search box
 
 $handler->getList($list_param, array(), $page_size, $fDisplay);
+$pagebrowser_alias = $handler->getPagebrowser($list_param, array());
 $tAlias = $handler->result();
 
 
@@ -422,7 +417,7 @@ class cNav_bar
     }
 }
 
-$pagebrowser_alias = create_page_browser("$table_alias.address", $alias_pagebrowser_query);
+
 $nav_bar_alias = new cNav_bar ($PALANG['pOverview_alias_title'], $fDisplay, $CONF['page_size'], $pagebrowser_alias, $search);
 $nav_bar_alias->url = '&amp;domain='.$fDomain;
 
@@ -439,7 +434,8 @@ if(empty($_GET['domain'])) {
     $_GET['domain'] = '';
 }
 $smarty->assign ('admin_list', array());
-$smarty->assign ('select_options', select_options ($list_domains, array ($fDomain)), false);
+$smarty->assign ('domain_list', $list_domains);
+$smarty->assign ('domain_selected', $fDomain);
 $smarty->assign ('nav_bar_alias', array ('top' => $nav_bar_alias->display_top (), 'bottom' => $nav_bar_alias->display_bottom ()), false);
 $smarty->assign ('nav_bar_mailbox', array ('top' => $nav_bar_mailbox->display_top (), 'bottom' => $nav_bar_mailbox->display_bottom ()), false);
 
